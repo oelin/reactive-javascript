@@ -1,6 +1,10 @@
 
 <html>
 	<script>
+		
+		// Stand-in for a reactive store. Can be replaced with other interfaces such as 
+		// RxJS Obervables or plain-old DOM events.
+		
 		class Variable {
 			constructor(value) {
 				this.subscribers = new Map()
@@ -25,56 +29,55 @@
 					subscriber(value)
 				}
 			}
-
-			get() {
-				return this.value
-			}
 		}
 
 
-		const username = new Variable('Sam')
+		const username = new Variable('Alice')
 
 
-		class UsernameInputComponent extends HTMLElement {
+		class UsernameComponent extends HTMLElement {
 			constructor() {
 				super()
 			}
 
 			connectedCallback() {
+				// Rendering...
 
 				this.innerHTML = `
 					<input placeholder=Username>
 				`
+				
+				// Subscriptions...
 
-				this.event0 = username.subscribe(value => {
+				this.subscription0 = username.subscribe(value => {
 					this.querySelector('input').value = value
 				})
 
-				this.event1 = this.querySelector('input').oninput = function() {
+				this.subscription1 = this.querySelector('input').oninput = function() {
 					username.set(this.value)
 				}
 			}
 
 			disconnectedCallback() {
-				username.unsubscribe(this.event0)
+				username.unsubscribe(this.subscription0)
 			}
 		}
 
 
-		class UsernameDisplayComponent extends HTMLElement {
+		class WelcomeComponent extends HTMLElement {
 			constructor() {
 				super()
 			}
 
 			connectedCallback() {
 
-				this.event0 = username.subscribe(value => {
-					this.innerHTML = `<h1>Hello ${value}</h1>`
+				this.subscription0 = username.subscribe(value => {
+					this.innerHTML = `<h1>Welcome, ${value}</h1>`
 				})
 			}
 
 			disconnectedCallback() {
-				username.unsubscribe(this.event0)
+				username.unsubscribe(this.subscription0)
 			}
 		}
 
@@ -87,17 +90,17 @@
 
 			connectedCallback() {
 				this.innerHTML = `
-					<x-username-input></x-username-input>
-					<x-username-display></x-username-display>
+					<username-component></username-component>
+					<welcome-component></welcome-component>
 				`
 			}
 		}
+		
 
-		customElements.define('x-app', AppComponent)
-		customElements.define('x-username-input', UsernameInputComponent)
-		customElements.define('x-username-display', UsernameDisplayComponent)
+		customElements.define('app-component', AppComponent)
+		customElements.define('username-component', UsernameComponent)
+		customElements.define('welcome-component', WelcomeComponent)
 
-
-		window.onload = () => document.body.innerHTML = '<x-app></x-app>'
+		window.onload = () => document.body.innerHTML = '<app-component></app-component>'
 	</script>
 </html>
