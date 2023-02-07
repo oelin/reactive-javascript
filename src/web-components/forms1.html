@@ -1,0 +1,103 @@
+
+<html>
+	<script>
+		class Variable {
+			constructor(value) {
+				this.subscribers = new Map()
+				this.value = value
+			}
+
+			subscribe(subscriber) {
+				this.subscribers.set(subscriber, subscriber)
+
+				subscriber(this.value)
+				return subscriber
+			}
+
+			unsubscribe(subscriber) {
+				this.subscribers.delete(subscriber)
+			}
+
+			set(value) {
+				this.value = value
+				
+				for (let subscriber of this.subscribers.values()) {
+					subscriber(value)
+				}
+			}
+
+			get() {
+				return this.value
+			}
+		}
+
+
+		const username = new Variable('Sam')
+
+
+		class UsernameInputComponent extends HTMLElement {
+			constructor() {
+				super()
+			}
+
+			connectedCallback() {
+
+				this.innerHTML = `
+					<input placeholder=Username>
+				`
+
+				this.event0 = username.subscribe(value => {
+					this.querySelector('input').value = value
+				})
+
+				this.event1 = this.querySelector('input').oninput = function() {
+					username.set(this.value)
+				}
+			}
+
+			disconnectedCallback() {
+				username.unsubscribe(this.event0)
+			}
+		}
+
+
+		class UsernameDisplayComponent extends HTMLElement {
+			constructor() {
+				super()
+			}
+
+			connectedCallback() {
+
+				this.event0 = username.subscribe(value => {
+					this.innerHTML = `<h1>Hello ${value}</h1>`
+				})
+			}
+
+			disconnectedCallback() {
+				username.unsubscribe(this.event0)
+			}
+		}
+
+
+		class AppComponent extends HTMLElement {
+
+			constructor() {
+				super()
+			}
+
+			connectedCallback() {
+				this.innerHTML = `
+					<x-username-input></x-username-input>
+					<x-username-display></x-username-display>
+				`
+			}
+		}
+
+		customElements.define('x-app', AppComponent)
+		customElements.define('x-username-input', UsernameInputComponent)
+		customElements.define('x-username-display', UsernameDisplayComponent)
+
+
+		window.onload = () => document.body.innerHTML = '<x-app></x-app>'
+	</script>
+</html>
